@@ -23,9 +23,9 @@ install_missing_modules(required_modules)
 import pymem
 import pymem.process
 import os
- '''
+'''
 Commented out code is from past versions of the script.
- '''
+'''
 def read_board(pm, base_address, start_offset, row_count=30, col_count=30, row_stride=0x20):
     board = []
     for row in range(row_count):
