@@ -888,6 +888,41 @@ dealloc(newmem)
           <Address>1</Address>
         </CheatEntry>
         <CheatEntry>
+          <ID>148</ID>
+          <Description>"68 = 4"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Byte</VariableType>
+          <Address>1</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>149</ID>
+          <Description>"69 = 5"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Byte</VariableType>
+          <Address>1</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>150</ID>
+          <Description>"70 = 6"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Byte</VariableType>
+          <Address>1</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>151</ID>
+          <Description>"71 = 7"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Byte</VariableType>
+          <Address>1</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>152</ID>
+          <Description>"72 = 8"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Byte</VariableType>
+          <Address>1</Address>
+        </CheatEntry>
+        <CheatEntry>
           <ID>122</ID>
           <Description>"138 = Bomb Revealed"</Description>
           <ShowAsSigned>0</ShowAsSigned>
