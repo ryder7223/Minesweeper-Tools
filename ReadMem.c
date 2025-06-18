@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define PROCESS_NAME "winmine.exe"
-// Build: cl winmine_reader.c /link psapi.lib
+// Build: cl ReadMem.c /link psapi.lib
 // Offsets for classic Minesweeper
 #define BASE_OFFSET  0x5361
 #define WIDTH_OFFSET 0x5334
