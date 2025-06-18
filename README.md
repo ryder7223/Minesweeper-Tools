@@ -15,4 +15,4 @@ The product version for this Minesweeper is `5.1.2600.0`
 - A python program to tell you where the bombs are
 - A port of it for C
 
-Click [here](https://github.com/ryder7223/Minesweeper-Tools/blob/main/build.md) for instructinos on how to build it yourself.
+Click [here](https://github.com/ryder7223/Minesweeper-Tools/blob/main/build.md) for instructions on how to build it yourself.
