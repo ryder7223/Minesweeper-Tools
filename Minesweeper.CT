@@ -136,6 +136,54 @@ dealloc(newmem)
 
 </AssemblerScript>
         </CheatEntry>
+        <CheatEntry>
+          <ID>145</ID>
+          <Description>"No Bombs"</Description>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+alloc(newmem,2048)
+label(returnhere)
+
+newmem:
+
+"winmine.exe"+352D:
+db EB
+
+returnhere:
+
+[DISABLE]
+
+"winmine.exe"+352D:
+db 74
+
+dealloc(newmem)
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>147</ID>
+          <Description>"Impossible Mode"</Description>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+alloc(newmem,2048)
+label(returnhere)
+
+newmem:
+
+"winmine.exe"+352D:
+db 75
+
+returnhere:
+
+[DISABLE]
+
+"winmine.exe"+352D:
+db 74
+
+dealloc(newmem)
+</AssemblerScript>
+        </CheatEntry>
       </CheatEntries>
     </CheatEntry>
     <CheatEntry>
@@ -954,6 +1002,13 @@ dealloc(newmem)
               <ShowAsSigned>0</ShowAsSigned>
               <VariableType>Byte</VariableType>
               <Address>010056A0</Address>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>142</ID>
+              <Description>"Units Cleared"</Description>
+              <ShowAsSigned>0</ShowAsSigned>
+              <VariableType>Byte</VariableType>
+              <Address>010057A4</Address>
             </CheatEntry>
           </CheatEntries>
         </CheatEntry>
