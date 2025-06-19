@@ -13,6 +13,6 @@ The product version for this Minesweeper is `5.1.2600.0`.
 ### Tools icluded:
 - A cheat table for the game
 - A python program to tell you where the bombs are
-- A port of it for C
+- A port of the python program in C
 
 Click [here](https://github.com/ryder7223/Minesweeper-Tools/blob/main/build.md) for instructions on how to build it yourself.
