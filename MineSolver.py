@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 from collections import deque
+from typing import Any
 
 REQUIRED_MODULES = ("pynput", "pymem")
 
@@ -24,13 +25,14 @@ CLICK_X_OFFSET = 0x5118
 CLICK_Y_OFFSET = 0x511C
 END_GAME_STATE = 0x5160
 DIFFICULTY = 0x56A0
+TIMER = 0x579C
 
 DOWN_VALUE = 0
 UNKNOWN_VALUE = 15
 BOMB_VALUE = 143
 
 CELL_SIZE = 16
-POLL_INTERVAL = 0.01
+POLL_INTERVAL = 0.0
 
 BOARD_ORIGIN = (0, 0)
 
@@ -85,16 +87,20 @@ def getModuleBase(pm: pymem.Pymem) -> int:
     return module.lpBaseOfDll
 
 
-def readFromOffset(pm: pymem.Pymem, offset: int) -> int:
+def readFromOffset(
+    pm: pymem.Pymem,
+    offset: int
+) -> Any:
     """Read a 32-bit integer from a Minesweeper memory offset."""
     moduleBase = getModuleBase(pm)
     return pm.read_int(moduleBase + offset)
 
 
-def getBoardSize(pm: pymem.Pymem) -> tuple[int, int]:
+def getBoardSize(
+    pm: pymem.Pymem,
+    moduleBase: int
+) -> tuple[int, int]:
     """Return the current board width and height."""
-    moduleBase = getModuleBase(pm)
-
     width = pm.read_int(moduleBase + WIDTH_OFFSET)
     height = pm.read_int(moduleBase + HEIGHT_OFFSET)
 
@@ -122,10 +128,12 @@ def readBoard(
     ]
 
 
-def getBoardValues(pm: pymem.Pymem) -> list[list[int]]:
+def getBoardValues(
+    pm: pymem.Pymem
+) -> list[list[int]]:
     """Return the current Minesweeper board values."""
     moduleBase = getModuleBase(pm)
-    width, height = getBoardSize(pm)
+    width, height = getBoardSize(pm, moduleBase)
 
     return readBoard(
         pm,
@@ -135,22 +143,45 @@ def getBoardValues(pm: pymem.Pymem) -> list[list[int]]:
     )
 
 
-def untouched(board: list[list[int]]) -> bool:
+def untouched(
+    board: list[list[int]]
+) -> bool:
     """
     Return True if the board contains no revealed cells.
 
     Unopened, flagged and down cells are all considered untouched.
     """
     return all(
-        cell in (UNKNOWN_VALUE, BOMB_VALUE, DOWN_VALUE)
+        value in (
+            UNKNOWN_VALUE,
+            BOMB_VALUE,
+            DOWN_VALUE
+        )
         for row in board
-        for cell in row
+        for value in row
     )
 
 
-def boardHasStarted(board: list[list[int]]) -> bool:
-    """Return True if the board contains a revealed cell."""
-    return not untouched(board)
+def boardHasStarted(
+    pm: pymem.Pymem,
+    board: list[list[int]]
+) -> bool:
+    """
+    Return True if a new game has actually started.
+
+    A game is considered started only when:
+    - the board contains a revealed cell,
+    - END_GAME_STATE is 0,
+    - the Minesweeper timer is greater than 0.
+    """
+    timer = readFromOffset(pm, TIMER)
+    gameState = readFromOffset(pm, END_GAME_STATE)
+
+    return (
+        not untouched(board)
+        and gameState == 0
+        and timer > 0
+    )
 
 
 def getNeighbours(
@@ -232,10 +263,13 @@ def bfsPath(
         return [start]
 
     queue = deque([start])
+
     previous: dict[
         tuple[int, int],
         tuple[int, int] | None
-    ] = {start: None}
+    ] = {
+        start: None
+    }
 
     directions = (
         (-1, 0),
@@ -291,7 +325,10 @@ def findRandomSafeGuess(
     return random.choice(candidates) if candidates else None
 
 
-def clickCell(x: int, y: int) -> None:
+def clickCell(
+    x: int,
+    y: int
+) -> None:
     """Move the mouse to a board cell and left-click it."""
     screenX = BOARD_ORIGIN[0] + x * CELL_SIZE
     screenY = BOARD_ORIGIN[1] + y * CELL_SIZE
@@ -322,16 +359,18 @@ def clickIfUnopened(
     return True
 
 
-def waitForGameStart(pm: pymem.Pymem) -> float:
+def waitForGameStart(
+    pm: pymem.Pymem
+) -> float:
     """
-    Wait until the board contains a value other than 15, 143 or 0.
+    Wait until a new Minesweeper game has actually started.
 
     Board dimensions are deliberately ignored.
     """
     while True:
         board = getBoardValues(pm)
 
-        if boardHasStarted(board):
+        if boardHasStarted(pm, board):
             startTime = time.perf_counter()
 
             difficulty = readFromOffset(
@@ -358,11 +397,14 @@ def waitForGameStart(pm: pymem.Pymem) -> float:
         time.sleep(POLL_INTERVAL)
 
 
-def waitForGameEnd(pm: pymem.Pymem) -> int:
+def waitForGameEnd(
+    pm: pymem.Pymem
+) -> int:
     """
     Wait until Minesweeper reports that the game has ended.
 
-    END_GAME_STATE is the only condition used to end an active game.
+    END_GAME_STATE is the only condition used to end an
+    active game.
     """
     while True:
         gameState = readFromOffset(
@@ -376,9 +418,11 @@ def waitForGameEnd(pm: pymem.Pymem) -> int:
         time.sleep(POLL_INTERVAL)
 
 
-def waitForGameReset(pm: pymem.Pymem) -> None:
+def waitForGameReset(
+    pm: pymem.Pymem
+) -> None:
     """
-    Wait until the completed game has been reset.
+    Wait until the ended game has been reset.
 
     Both END_GAME_STATE == 0 and an untouched board are required.
     """
@@ -457,8 +501,7 @@ def fallbackExploreAll(
 
 
 def solveGame(
-    pm: pymem.Pymem,
-    startTime: float
+    pm: pymem.Pymem
 ) -> int:
     """
     Solve the active Minesweeper game.
@@ -469,9 +512,6 @@ def solveGame(
 
     if not board:
         return readFromOffset(pm, END_GAME_STATE)
-
-    height = len(board)
-    width = len(board[0])
 
     clickedX = readFromOffset(pm, CLICK_X_OFFSET) - 1
     clickedY = readFromOffset(pm, CLICK_Y_OFFSET) - 1
@@ -502,7 +542,18 @@ def solveGame(
         if gameState != 0:
             return gameState
 
+        # Always use the current board dimensions for solving.
+        # A dimension change is not itself a game-state transition.
         board = getBoardValues(pm)
+
+        height = len(board)
+        width = len(board[0]) if height else 0
+
+        if not board:
+            return readFromOffset(
+                pm,
+                END_GAME_STATE
+            )
 
         safeMoves = deduceSafeCells(board)
 
@@ -557,15 +608,25 @@ def solveGame(
             )
 
 
-def gameLoop(pm: pymem.Pymem) -> None:
+def gameLoop(
+    pm: pymem.Pymem
+) -> None:
     """Wait for, solve and report Minesweeper games indefinitely."""
     while True:
+        # Make sure we are starting from a genuinely reset board.
+        # This prevents a previously revealed board from being
+        # mistaken for the start of a new game.
+        board = getBoardValues(pm)
+
+        if not untouched(board):
+            time.sleep(POLL_INTERVAL)
+            continue
+
+        # State 1: wait for a newly started game.
         startTime = waitForGameStart(pm)
 
-        gameState = solveGame(
-            pm,
-            startTime
-        )
+        # State 2: solve until END_GAME_STATE changes.
+        gameState = solveGame(pm)
 
         elapsed = time.perf_counter() - startTime
 
@@ -582,20 +643,29 @@ def gameLoop(pm: pymem.Pymem) -> None:
         print(f"Time elapsed: {elapsed:.3f}")
         print("-" * 21)
 
+        # State 3: wait until the smiley/reset operation has
+        # returned the board to its untouched state.
         waitForGameReset(pm)
 
 
 def main() -> None:
-    os.system("cls" if os.name == "nt" else "clear")
+    os.system(
+        "cls" if os.name == "nt" else "clear"
+    )
 
     try:
         pm = pymem.Pymem(PROCESS_NAME)
         gameLoop(pm)
 
     except pymem.exception.ProcessNotFound:
-        print(f"Error: Process '{PROCESS_NAME}' not found.")
+        print(
+            f"Error: Process '{PROCESS_NAME}' not found."
+        )
+
     except Exception as error:
-        print(f"Unexpected error occurred:\n{error}")
+        print(
+            f"Unexpected error occurred:\n{error}"
+        )
 
 
 if __name__ == "__main__":
