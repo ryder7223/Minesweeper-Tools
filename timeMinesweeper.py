@@ -21,12 +21,13 @@ WIDTH_OFFSET = 0x5334
 HEIGHT_OFFSET = 0x5338
 END_GAME_STATE = 0x5160
 DIFFICULTY = 0x56A0
+TIMER = 0x579C
 
 DOWN_VALUE = 0
 UNKNOWN_VALUE = 15
 BOMB_VALUE = 143
 
-POLL_INTERVAL = 0.01
+POLL_INTERVAL = 0.0
 
 
 def installMissingModules(modules: tuple[str, ...]) -> None:
@@ -84,7 +85,9 @@ def getBoardSize(pm: pymem.Pymem, moduleBase: int) -> tuple[int, int]:
 
 def boardHasStarted(pm, board: list[list[int]]) -> bool:
     """Return True if the board contains a revealed cell."""
-    return not untouched(board)
+    timer = readFromOffset(pm, TIMER)
+    gameState = readFromOffset(pm, END_GAME_STATE)
+    return not untouched(board) and gameState == 0 and timer > 0
 
 
 def getModuleBase(pm: pymem.Pymem) -> Any:
@@ -177,6 +180,9 @@ def untouched(values: list[list[int]]) -> bool:
 def gameLoop(pm: pymem.Pymem) -> None:
     """Monitor Minesweeper games indefinitely."""
     while True:
+        board = getBoardValues(pm)
+        if not untouched(board):
+            continue
         # State 1: wait for a board containing a revealed cell.
         startTime = waitForGameStart(pm)
 
