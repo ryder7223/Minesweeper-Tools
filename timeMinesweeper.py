@@ -130,14 +130,20 @@ def waitForGameStart(pm: pymem.Pymem) -> float:
         if boardHasStarted(pm, board):
             startTime = time.perf_counter()
             diff = readFromOffset(pm, DIFFICULTY)
+            width = readFromOffset(pm, WIDTH_OFFSET)
+            height = readFromOffset(pm, HEIGHT_OFFSET)
+            mines = countInBoard(board, (143, 128))
             print("Difficulty: ", end="")
             match diff:
                 case 0:
-                    print("Beginner")
+                    print("Beginner",end="")
                 case 1:
-                    print("Intermediate")
+                    print("Intermediate",end="")
                 case 2:
-                    print("Expert")
+                    print("Expert",end="")
+                case 3:
+                    print(f"Custom",end="")
+            print(f" [{width}x{height} | {mines}]")
 
             return startTime
 
@@ -176,6 +182,8 @@ def waitForGameReset(pm: pymem.Pymem) -> None:
 def untouched(values: list[list[int]]) -> bool:
     return all(val in (UNKNOWN_VALUE, BOMB_VALUE, DOWN_VALUE) for _ in values for val in _)
 
+def countInBoard(values: list[list[int]], numbers: tuple[int]) -> bool:
+    return sum(val in numbers for _ in values for val in _)
 
 def gameLoop(pm: pymem.Pymem) -> None:
     """Monitor Minesweeper games indefinitely."""
