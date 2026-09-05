@@ -16,5 +16,6 @@ The product version for this Minesweeper is `5.1.2600.0`.
 - A port of the python program in C
 - A python program that solves games really fast
 - A python program that times your game duration precisely
+- A python program which demonstrates usage of the `processTool` package for displaying mine locations
 
 Click [here](https://github.com/ryder7223/Minesweeper-Tools/blob/main/build.md) for instructions on how to build it yourself.
